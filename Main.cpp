@@ -9,6 +9,16 @@ struct Student {
   char lname[15];
   int id;
   float gpa;
+public:
+  Student(){
+    
+  }
+  Student(char* newFName, char* newLName, int newID, float newGPA){
+    strcpy(fname, newFName);
+    strcpy(lname, newLName);
+    id = newID;
+    gpa = newGPA;
+  }
 };
 
 class HNode {
@@ -38,17 +48,17 @@ public:
   }
 };
 
-void add(HNode** &hTable, int size);
 void rehash(HNode** &hTable, int size);
-void search(HNode** hTable, int size);
 void print(HNode* head);
-void generate(int number, int &idRand, int size, HNode** &hTable);
+void generate(int number, int &random, int &idRand, int size, HNode** &hTable);
 int hashFunction(int data, int size);
-void addStudent(Student* student, HNode* &head, int size);
+void addStudent(int size, Student* student, HNode** head, HNode** &hTable);
+void deleteStudent(int size, int id, HNode** &hTable);
 
 int main(){
   int size = 10;
   int id = 0;
+  int random = 0;
   HNode** hTable = new HNode*[size];
   //Student* student = new Student();
 
@@ -64,48 +74,61 @@ int main(){
   char DELETE[] = "DELETE";
   char GENERATE[] = "GENERATE";
   char QUIT[] = "QUIT";
-  char AVERAGE[]="AVERAGE";
   bool ifRehash = false;
   
   //Ask the user for a command
-  cout << "Enter a command (ADD, PRINT, DELETE, AVERAGE, or QUIT):" << endl;
-  int x=0;
+  cout << "Enter a command (ADD, PRINT, DELETE, GENERATE, or QUIT):" << endl;
   while (running == true) {
-    cin.get(command,10);
-    cin.get();
+    cin >> command;
+    //cin.get(command,10);
+    //cin.get();
+
     //Allow both upper and lower case
     for(int i=0; i < strlen(command); i++) {
       command[i] = toupper(command[i]);
     }
-    cout << command << endl;
-
-    if(x>0){
-      cout << "test" << endl;
-      return 0;
-    }
+    
     if(strcmp(command, ADD) == false){
-      //add(hTable, size);
+      char* newF = new char[15];
+      cout << "Enter a first name:" << endl;
+      cin >> newF;
+
+      char* newL = new char[15];
+      cout << "Enter a last name:" << endl;
+      cin >> newL;
+
+      int nID = 0;
+      cout << "Enter a unique ID:" << endl;
+      cin >> nID;
+
+      float nGPA = 0;
+      cout << "Enter a GPA:" << endl;
+      cin >> nGPA;
+
+      Student* student = new Student(newF, newL, nID, nGPA);
+      addStudent(size, student, &(hTable[hashFunction(student->id, size)]), hTable);
+      
       rehash(hTable, size);
-      cout<< "Enter a command (ADD, PRINT, DELETE, AVERAGE, or QUIT):" << endl;
+      cout << "Enter a command (ADD, PRINT, DELETE, GENERATE, or QUIT):" << endl;
     }
     else if(strcmp(command, PRINT) == false){
-      //print(hTable, size);
-      cout<< "Enter a command (ADD, PRINT, DELETE, AVERAGE, or QUIT):" << endl;
-
-    }
-    else if(strcmp(command, DELETE) == false){
-      cout<< "Enter a command (ADD, PRINT, DELETE, AVERAGE, or QUIT):" << endl;
-    }
-    else if(strcmp(command, GENERATE) == false){
-      generate(0, id, size, hTable);
       for(int i=0; i<size; i++){
 	print(hTable[i]);
       }
+      cout << "Enter a command (ADD, PRINT, DELETE, GENERATE, or QUIT):" << endl;
 
-      //print(hTable, size);
-      search(hTable, size);
+    }
+    else if(strcmp(command, DELETE) == false){
+      cout << "Enter the ID you want to delete:" << endl;
+      int target = 0;
+      cin >> target;
+      deleteStudent(size, target, hTable);
+      cout << "Enter a command (ADD, PRINT, DELETE, GENERATE, or QUIT):" << endl;
+    }
+    else if(strcmp(command, GENERATE) == false){
+      generate(0,random, id, size, hTable);
       //rehash(hTable, size);
-      cout<< "Enter a command (ADD, PRINT, DELETE, AVERAGE, or QUIT):" << endl;
+      cout << "Enter a command (ADD, PRINT, DELETE, GENERATE, or QUIT):" << endl;
     }
     else if(strcmp(command, QUIT) == false){
       running = false;
@@ -113,213 +136,144 @@ int main(){
     else{
       cout << "Please enter a valid command:" << endl;
     }
-    x++;
   }
   return 0;
 }
 
 void rehash(HNode** &hTable, int size){
-  bool needRehash=false;
+  /*bool needRehash=false;
   for(int i=0; i<size; i++){
-    int x=0;
-    while(hTable[i] != NULL){
-      hTable[i] = hTable[i]->getNext();
-      x++;
-    }
-    if(x>3){
-      needRehash = true;
-      cout << "need rehash" << endl;
-    }
-  }
-
-  if(needRehash){
-    HNode** newHTable = new HNode*[size*2];
-    for(int i=0; i < size; i++){
-      while(hTable[i] != NULL){
-	newHTable[hashFunction(hTable[i]->getStudent()->id, size*2)]
-	  = new HNode(hTable[i]->getStudent());
-	
-	hTable[i] = hTable[i]->getNext();
+    HNode* y = hTable[i];
+    if(y != NULL){
+      int x=0;
+      HNode** current = hTable;
+      while(current[i]->getNext() != NULL){
+	x++;
+	current[i] = current[i]->getNext();
+      }
+      if(x>3){
+	needRehash = true;
+	//cout << "need rehash" << endl;
       }
     }
-    for(int i=0; i<size; i++){
-      hTable[i]->~HNode();
-    }
-    size = size*2;
-    //HNode** hTable = new HNode*[size];
-    hTable = newHTable;
-    delete[] newHTable;
-    cout << "Rehashed!" << endl;
   }
-}
-
-void add(HNode** &hTable, int size){
-  Student* student = new Student();
-
-  cout << "Enter a first name:" << endl;
-  cin.get(student->fname, 15);
-  cin.get();
-
-  cout << "Enter a last name:" << endl;
-  cin.get(student->lname, 15);
-  cin.get();
-
-  cout << "Enter a unique ID:" << endl;
-  cin >> student->id;
-
-  cout << "Enter a GPA:" << endl;
-  cin >> student->gpa;
-
-  double hashed = hashFunction(student->id, size);
-  cout << hashed << endl;
   for(int i=0; i<size; i++){
-    if(i == hashed && hTable[i] == NULL){
-      hTable[i] = new HNode(student);
-    }
-    else if(hTable[i] != NULL){
-      while(hTable[i]->getNext() != NULL){	
-        hTable[i] = hTable[i]->getNext();
-      }
-      hTable[i]->setNext(new HNode(student));
-    }
+    print(hTable[i]);
   }
-  hTable[hashFunction(student->id,size)] = new HNode(student);
-  cout << "Added!" << endl;
-}
-
-void search(HNode** hTable, int size){
-  cout << "Enter the ID of the student you would like to print:" << endl;
-  int idPrint;
-  cin >> idPrint;
-  idPrint = hashFunction(idPrint, size);
-  //cout << idPrint << endl;
-
-  for(int i=0; i<size; i++){
-    while(hTable[i] != NULL){
-      if(i == idPrint){
-	//cout << i << endl;
-	cout << "Name: " << hTable[i]->getStudent()->fname;
-	cout << " " << hTable[i]->getStudent()->lname << endl;
+    
+  if(){*/
+  //cout << "Rehashing" << endl;
+  int count=0;
+      HNode** newHTable = new HNode*[size*2];
+      for(int i=0; i<size*2; i++){
+	newHTable[i] = NULL;
       }
-      hTable[i] = hTable[i]->getNext();
-    }
-  }
+      for(int i=0; i < size; i++){
+	//cout << "in" << endl;
+	//cout << hTable[i]->getStudent()->fname << endl;
+	HNode* temp = hTable[i];
+	//cout << temp->getStudent()->fname << endl;
+	while(temp != NULL){
+	  addStudent(size*2, temp->getStudent(),
+		     &(newHTable[hashFunction(temp->getStudent()->id, size*2)]), hTable);
+	  temp = temp->getNext();
+	  count++;
+	  //cout << "added" << endl;
+	}
+      }
+      for(int i=0; i<size; i++){
+	hTable[i]->~HNode();
+      }
+      size = size*2;
+      hTable = new HNode*[size];
+      hTable = newHTable;
+      delete[] newHTable;
+      cout << "Rehashed!" << endl;
+      cout << count << endl;
+      //cout << hTable[1]->getStudent()->fname << endl;
 }
 
 void print(HNode* head){
-  /*cout << hTable[1]->getStudent()->fname << hTable[1]->getStudent()->id << endl;
-  cout << hTable[1]->getStudent()->fname << hTable[1]->getNext()->getStudent()->id	<< endl;
-  cout << hTable[1]->getStudent()->fname << hTable[1]->getStudent()->id	<< endl;
-  
-  HNode** temp = hTable;
-  cout << "printing..." << endl;
-  for(int i=0; i<size; i++){
-    if(temp[i] != NULL){
-      while(temp[i] != NULL){
-        cout << temp[i]->getStudent()->fname << " "
-             << temp[i]->getStudent()->lname
-             << ", GPA: " << temp[i]->getStudent()->gpa << ", ID: "
-             << temp[i]->getStudent()->id << endl;
-        temp[i] = temp[i]->getNext();
-      }
-    }
-  }
-
-  cout << "again" << endl;
-  for(int i=0; i<size; i++){
-    if(hTable[i] != NULL){
-      while(hTable[i] != NULL){
-	cout << hTable[i]->getStudent()->fname << " "
-	     << hTable[i]->getStudent()->lname
-	     << ", GPA: " << hTable[i]->getStudent()->gpa << ", ID: "
-	     << hTable[i]->getStudent()->id << endl;
-	hTable[i] = hTable[i]->getNext();
-      }
-    }
-    }*/
-
   if(head){
-    cout << head->getStudent()->fname << head->getStudent()->id << endl;
+    cout << head->getStudent()->fname << " " << head->getStudent()->lname
+	 << ", ID: " << head->getStudent()->id
+	 << ", GPA: " << head->getStudent()->gpa << endl;
     print(head->getNext());
   }
-  cout << "printed" << endl;
 }
 
-void generate(int number, int &idRand, int size, HNode** &hTable){
-  fstream FNfile;
-  fstream LNfile;
-  FNfile.open("fname.txt");
-  LNfile.open("lname.txt");
-  
+void generate(int number, int &random,  int &idRand, int size, HNode** &hTable){
+  srand(time(NULL));
   cout << "How many students do you want to generate?" << endl;
   cin >> number;
-  
+  int	lineNum	= 0;
+
   for(int i=0; i<number; i++){
+    fstream FNfile;
+    fstream LNfile;
+    FNfile.open("fname.txt");
+    LNfile.open("lname.txt");
+
+    lineNum = 0;
+    int oldR = random;
+    while(oldR == random){
+      random = rand() % 1001; 
+    }
     Student* randStudent = new Student();
     char* firstN = new char[50];
     char* lastN = new char[50];
-    FNfile >> randStudent->fname;
-    LNfile >> randStudent->lname;
+    while(FNfile >> randStudent->fname && LNfile >> randStudent->lname){
+      if(lineNum == random) break;
+      lineNum++;
+    }
     idRand++;
     randStudent->id = idRand;
     double gpaRand = (double)(rand()%400-0)/100;
     randStudent->gpa = gpaRand;
-    addStudent(randStudent, hTable[hashFunction(randStudent->id, size)], size); 
-    /*if(hTable[hashFunction(randStudent->id,size)] == NULL){
-      hTable[hashFunction(randStudent->id,size)] = new HNode(randStudent);
-    }
-    else if(hTable[hashFunction(randStudent->id,size)] != NULL){
-      while(hTable[hashFunction(randStudent->id,size)]->getNext() != NULL){
-        hTable[hashFunction(randStudent->id,size)]
-	  = hTable[hashFunction(randStudent->id,size)]->getNext();
-      }
-      hTable[hashFunction(randStudent->id,size)]->setNext(new HNode(randStudent));
-      }*/
-    //hTable[hashFunction(randStudent->id,size)] = new HNode(randStudent);
-    //cout << "Name: " << randStudent->fname << " " <<  randStudent->lname << ", ID:"
-    //<< randStudent->id << ", GPA:" << randStudent->gpa << endl;
-    //cout << (double)rand()/(RAND_MAX + 1)+(rand()%4) << endl;
-    //srand (time(NULL));
-    //double seed = ((double)rand()) / ((double)RAND_MAX) * 4;
-    //printf("%.2lf\n", seed);
-    //cout << (float(rand())/float((RAND_MAX)) * 0.4) << endl;
+    addStudent(size, randStudent, &(hTable[hashFunction(randStudent->id, size)]), hTable); 
   }
+  cout << "Generated!" << endl;
 }
 
 int hashFunction(int data, int size){
   return data % size;
 }
 
-void addStudent(Student* student, HNode* &head, int size){
-  //int hashed = hashFunction(student->id, size);
-  HNode* temp = head;
+void addStudent(int size, Student* student, HNode** head, HNode** &hTable){
+  HNode* temp = NULL;
+  temp = new HNode(student);
+  temp->setNext(*head);
+  *head = temp;
+  if((*head)->getNext() != NULL && (*head)->getNext()->getNext() != NULL
+     && (*head)->getNext()->getNext()->getNext() != NULL){
+    cout << "about to rehash" << endl;
+    //rehash(hTable, size);
+  }
+}
 
-  if(temp == NULL){
-    temp = new HNode(student);
-  }
-  else{
-    while(temp->getNext() != NULL){
-      temp = temp->getNext();
+void deleteStudent(int size, int id, HNode** &hTable){
+  for(int i=0; i<size; i++){
+    if(hTable[i]){
+      HNode* prev = NULL;
+      HNode* head = hTable[i];
+      HNode* first = hTable[i];
+      if(first->getStudent()->id == id){
+	HNode* temp = first;
+	first = first->getNext();
+	temp->~HNode();
+	hTable[i] = first;
+      }
+      else{
+	while(head->getNext() != NULL && head->getStudent()->id != id){
+	  prev = head;
+	  head = head->getNext();
+	}
+	if(id == head->getStudent()->id){
+	  prev->setNext(head->getNext());
+	  head->~HNode();
+	}
+      }
     }
-    temp->setNext(new HNode(student));
   }
-  
-  /*if(hTable[hashed] == NULL){
-    hTable[hashed] = new HNode(student);
-  }
-  else if(hTable[hashed] != NULL){
-    HNode* temp = hTable[hashed]->getNext();
-    hTable[hashed]->setNext(new HNode(student));
-    hTable[hashed] = hTable[hashed]->getNext();
-    hTable[hashed]->setNext(temp);
-    
-    }*/
-
-  /*if(hTable[hashed]->getNext() == NULL){
-      hTable[hashed]->setNext(new HNode(student));
-    } else{
-      //hTable[hashed] = hTable[hashed]->getNext();
-      addStudent(student, hTable[hashed]->getNext(), size);
-    }
-    }*/
+  cout << "Deleted!" << endl;
 }
